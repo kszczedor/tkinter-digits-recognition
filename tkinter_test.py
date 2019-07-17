@@ -16,8 +16,8 @@ class Main:
         self.old_x = None
         self.old_y = None
         self.penwidth = 21
-        self.cnn_model = tf.keras.models.load_model('cnn.model')
-        self.bp_model = tf.keras.models.load_model('Mnist_model.model')
+        self.cnn_model = tf.keras.models.load_model('cnn_test.model')
+        self.bp_model = tf.keras.models.load_model('dff_test.model')
         self.digit = StringVar()
 
         self.master.frame
