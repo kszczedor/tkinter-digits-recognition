@@ -16,9 +16,8 @@ class Main:
         self.old_x = None
         self.old_y = None
         self.penwidth = 21
-        self.cnn_model = tf.keras.models.load_model('cnn_test.model')
-        self.bp_model = tf.keras.models.load_model('dff_test.model')
         self.digit = StringVar()
+        self.path = "_test.model"
 
         self.master.frame
         self.drawWidgets()
@@ -29,6 +28,28 @@ class Main:
         self.c.bind('<Button-2>', self.predict)
         self.c.bind('<Button-3>', self.clear)
         self.master.protocol("WM_DELETE_WINDOW", self.close)
+
+        try:
+            self.cnn_model = tf.keras.models.load_model('cnn'+self.path)
+        except:
+            if messagebox.askyesno("Load model error", "Do you want to create new CNN network model?"):
+                from network import Network
+                nn = Network()
+                nn.createCnnModel()
+                self.cnn_model = nn.cnnModel
+            else:
+                self.master.destroy()
+
+        try:
+            self.dff_model = tf.keras.models.load_model('dff'+self.path)
+        except:
+            if messagebox.askyesno("Load model error", "Do you want to create new DFF network model?"):
+                from network import Network
+                nn = Network()
+                nn.createDffModel()
+                self.dff_model = nn.dffModel
+            else:
+                self.master.destroy()
 
 
     def paint(self, e):
@@ -98,7 +119,7 @@ class Main:
     def predict(self, e=None):
 
         arr_cnn, arr_bp = self.prepareData()
-        prediction = {'cnn':self.cnn_model.predict(arr_cnn), 'bp':self.bp_model.predict(arr_bp)}
+        prediction = {'cnn':self.cnn_model.predict(arr_cnn), 'bp':self.dff_model.predict(arr_bp)}
 
         Label(self.master, text=str(np.argmax(prediction['cnn'])), width=3).grid(row=0, column=30 ,sticky=W)
         Label(self.master, text=str(np.argmax(prediction['bp'])), width=3).grid(row=1, column=30 ,sticky=W)
@@ -115,10 +136,15 @@ class Main:
         x_cnn, x_bp = self.prepareData()
 
         self.cnn_model.train_on_batch(x_cnn[0:1], y)
-        self.bp_model.train_on_batch(x_bp[0:1], y)
+        self.dff_model.train_on_batch(x_bp[0:1], y)
 
     def close(self):
-        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        if messagebox.askyesno("Quit", "Do you want to save training progress before quit?"):
+            
+            self.cnn_model.save('cnn'+self.path)
+            self.dff_model.save('dff'+self.path)
+            self.master.destroy()
+        else:
             self.master.destroy()
 
 

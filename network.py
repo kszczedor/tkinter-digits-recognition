@@ -6,8 +6,8 @@ class Network():
     def __init__(self):
         
         self.x_train, self.y_train, self.x_test, self.y_test = self.getData()
-        self.cnnModel = self.createCnnModel()
-        self.dffModel = self.createDffModel()
+        self.cnnModel = None
+        self.dffModel = None
 
     def createCnnModel(self):
 
@@ -24,7 +24,7 @@ class Network():
 
         model.fit(self.x_train, self.y_train, batch_size=32, epochs=10, validation_data=(self.x_test,self.y_test))
 
-        return model
+        self.cnnModel = model
 
     def createDffModel(self):
     
@@ -42,7 +42,7 @@ class Network():
         
         model.fit(self.x_train, self.y_train, batch_size=32, epochs=10, validation_data=(self.x_test,self.y_test))
        
-        return model
+        self.dffModel = model
 
     '''def train(self, model):
     
@@ -65,6 +65,8 @@ class Network():
 if __name__ == '__main__':
 
     nn = Network()
+    nn.createCnnModel()
+    nn.createDffModel()
     nn.save(nn.cnnModel,'cnn_test.model')
     nn.save(nn.dffModel,'dff_test.model')
 
