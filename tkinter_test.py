@@ -16,6 +16,8 @@ class Main:
         self.old_x = None
         self.old_y = None
         self.penwidth = 21
+        self.cnn_label = StringVar()
+        self.dff_label = StringVar()
         self.digit = StringVar()
         self.path = "_test.model"
 
@@ -29,6 +31,8 @@ class Main:
         self.c.bind('<Button-3>', self.clear)
         self.master.protocol("WM_DELETE_WINDOW", self.close)
 
+
+        # load models or create new ones
         try:
             self.cnn_model = tf.keras.models.load_model('cnn'+self.path)
         except:
@@ -82,53 +86,57 @@ class Main:
         self.c = Canvas(self.master, width=280, height=280,  bg=self.color_bg)
         self.c.grid(row=0, column=0, columnspan=28, rowspan=28,sticky=W+E+N+S, padx=5, pady=5)
 
-        # top labels
-        Label(self.master, text="CNN:").grid(row=0, column=29 ,sticky=W)
-        Label(self.master, text="0", width=3).grid(row=0, column=30 ,sticky=W)
-        Label(self.master, text="BP:").grid(row=1, column=29 ,sticky=W)
-        Label(self.master, text="0", width=3).grid(row=1, column=30 ,sticky=W)
+        # prediction labels
+        Label(self.master, text="Prediction").grid(row=0, column=29 ,sticky=W, columnspan=30)
 
-        # predict, clear buttons
+        Label(self.master, text="CNN:").grid(row=1, column=29 ,sticky=W)
+        Label(self.master, text="0", width=3, textvariable=self.cnn_label).grid(row=1, column=30 ,sticky=W)
+
+        Label(self.master, text="DFF:").grid(row=2, column=29 ,sticky=W)
+        Label(self.master, text="0", width=3, textvariable=self.dff_label).grid(row=2, column=30 ,sticky=W)
+
+        # predict and clear buttons
         Button(self.master, text="Predict", command=self.predict).grid(row=12, column=29, columnspan=30)
         Button(self.master, text="Clear", command=self.clear).grid(row=13, column=29, columnspan=30)
 
         # learning section
         Label(self.master, text="Digit:", width=3).grid(row=20, column=29 ,sticky=W)
-        self.spinbox = Spinbox(self.master, from_=0, to=9, textvariable=self.digit, width=2)
-        self.spinbox.grid(row=20, column=30 ,sticky=W)
+        Spinbox(self.master, from_=0, to=9, textvariable=self.digit, width=2).grid(row=20, column=30 ,sticky=W)
         Button(self.master, text="Learn", command=self.learn).grid(row=21, column=29, columnspan=30)
 
     def prepareData(self):
 
+        # image coords
         x = self.master.winfo_rootx() + self.c.winfo_x()
         y = self.master.winfo_rooty() + self.c.winfo_y()
         x1 = x + self.c.winfo_width()
         y1 = y + self.c.winfo_height()
 
+        # resize to 28x28, anti-aliasing, invertic
         img = PIL.ImageGrab.grab().crop((x,y,x1,y1)).resize((28, 28), resample=Image.LANCZOS).convert('L')
         img = PIL.ImageOps.invert(img)
 
+        # img -> np.array, normalize
         arr = np.array(img)
         arr_n = tf.keras.utils.normalize(arr, axis=0)
 
+        # transform np.array to each model shape
         arr_cnn = np.array([np.expand_dims(arr_n,-1)])
-        arr_bp = np.array([[arr_n]])
-        return arr_cnn, arr_bp
+        arr_dff = np.array([[arr_n]])
+        return arr_cnn, arr_dff
 
 
     def predict(self, e=None):
 
-        arr_cnn, arr_bp = self.prepareData()
-        prediction = {'cnn':self.cnn_model.predict(arr_cnn), 'bp':self.dff_model.predict(arr_bp)}
+        arr_cnn, arr_dff = self.prepareData()
 
-        Label(self.master, text=str(np.argmax(prediction['cnn'])), width=3).grid(row=0, column=30 ,sticky=W)
-        Label(self.master, text=str(np.argmax(prediction['bp'])), width=3).grid(row=1, column=30 ,sticky=W)
+        # predict
+        prediction = {'cnn':self.cnn_model.predict(arr_cnn), 'dff':self.dff_model.predict(arr_dff)}
 
+        # update prediction labels
+        self.cnn_label.set(str(np.argmax(prediction['cnn'])))
+        self.dff_label.set(str(np.argmax(prediction['dff'])))
 
-        #plt.imshow(arr, cmap = plt.cm.binary)    
-        #plt.title("cnn: {} | bp: {}".format(np.argmax(prediction['cnn']), np.argmax(prediction['bp'])))
-        #plt.show()
-        #print("cnn: {} | bp: {}".format(np.argmax(prediction['cnn']), np.argmax(prediction['bp'])))
         
     def learn(self):
 
@@ -144,15 +152,14 @@ class Main:
             self.cnn_model.save('cnn'+self.path)
             self.dff_model.save('dff'+self.path)
             self.master.destroy()
+
         else:
             self.master.destroy()
 
 
 if __name__ == '__main__':
 
-    np.set_printoptions(threshold=sys.maxsize)
-
     root = Tk()
-    Main(root)
     root.resizable(width=False, height=False)
+    Main(root)
     root.mainloop()
