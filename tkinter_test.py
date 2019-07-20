@@ -20,6 +20,7 @@ class Main:
         self.dff_label = StringVar()
         self.digit = StringVar()
         self.path = "_test.model"
+        self.pre_path = "models/"
 
         self.master.frame
         self.drawWidgets()
@@ -34,7 +35,7 @@ class Main:
 
         # load models or create new ones
         try:
-            self.cnn_model = tf.keras.models.load_model('cnn'+self.path)
+            self.cnn_model = tf.keras.models.load_model(self.pre_path+'cnn'+self.path)
         except:
             if messagebox.askyesno("Load model error", "Do you want to create new CNN network model?"):
                 from network import Network
@@ -45,7 +46,7 @@ class Main:
                 self.master.destroy()
 
         try:
-            self.dff_model = tf.keras.models.load_model('dff'+self.path)
+            self.dff_model = tf.keras.models.load_model(self.pre_path+'dff'+self.path)
         except:
             if messagebox.askyesno("Load model error", "Do you want to create new DFF network model?"):
                 from network import Network
@@ -149,8 +150,8 @@ class Main:
     def close(self):
         if messagebox.askyesno("Quit", "Do you want to save training progress before quit?"):
             
-            self.cnn_model.save('cnn'+self.path)
-            self.dff_model.save('dff'+self.path)
+            self.cnn_model.save(self.pre_path+'cnn'+self.path)
+            self.dff_model.save(self.pre_path+'dff'+self.path)
             self.master.destroy()
 
         else:
