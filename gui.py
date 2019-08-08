@@ -1,10 +1,12 @@
 from tkinter import *
 from tkinter import messagebox
 import PIL
-from PIL import ImageGrab, Image, ImageOps
+from PIL import Image, ImageOps
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import pyscreenshot as ImageGrab
+import keras
 
 
 class Main:
@@ -34,10 +36,12 @@ class Main:
 
         # load models or create new ones
         try:
-            self.cnn_model = tf.keras.models.load_model(
-                self.pre_path+'cnn' + self.path
+            self.cnn_model = keras.models.load_model(
+                #self.pre_path+'cnn'+self.path
+                'models/cnn.model'
                 )
-        except:
+        except Exception as e:
+            print(f'eexeption: {e}')
             if messagebox.askyesno(
                 "Load model error",
                 "Do you want to create new CNN network model?"
@@ -50,8 +54,8 @@ class Main:
                 self.master.destroy()
 
         try:
-            self.dff_model = tf.keras.models.load_model(
-                self.pre_path+'dff' + self.path)
+            self.dff_model = keras.models.load_model(
+                self.pre_path+'dff'+self.path)
         except:
             if messagebox.askyesno(
                 "Load model error",
@@ -121,7 +125,7 @@ class Main:
         y1 = y + self.c.winfo_height()
 
         # resize to 28x28, anti-aliasing, invertic
-        img = PIL.ImageGrab.grab()
+        img = ImageGrab.grab()
         img = img.crop((x, y, x1, y1)).resize((28, 28), resample=Image.LANCZOS)
         img = img.convert('L')
         img = PIL.ImageOps.invert(img)
